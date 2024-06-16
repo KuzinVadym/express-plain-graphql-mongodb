@@ -2,8 +2,8 @@ import pino from 'pino';
 import { settings } from './settings';
 import { IRootService } from './interfaces';
 import { RootService } from './rootService';
-
-
+import schemas from './api/schemas';
+import root from './api/resolvers';
 
 const logger = pino();
 
@@ -14,7 +14,7 @@ const logger = pino();
 
     await rootService.withDB();
 
-    await rootService.init();
+    await rootService.init(schemas, root);
 
     rootService.listen();
   } catch (e) {
