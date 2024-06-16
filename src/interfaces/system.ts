@@ -1,5 +1,7 @@
 import { Express } from 'express';
+import { GraphQLSchema } from 'graphql';
 import { Logger } from 'pino';
+import { IGraphQlHandlers } from './api';
 
 export interface IDatabaseSettings {
   name: string;
@@ -12,7 +14,10 @@ export interface ISettings {
 }
 
 export interface IRootService {
-  init: () => Promise<void>;
+  init: (
+    schema: GraphQLSchema,
+    root: IGraphQlHandlers
+  ) => Promise<void>;
   withDB?: () => Promise<void>;
   listen: () => void;
 }

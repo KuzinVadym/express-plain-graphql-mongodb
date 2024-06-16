@@ -1,7 +1,9 @@
 import express, { Express } from 'express';
 
-import { ILogger, IMongoClient, IRootService, ISettings } from './interfaces';
+import { IGraphQlHandlers, ILogger, IMongoClient, IRootService, ISettings } from './interfaces';
 import { MongoClient } from './clients';
+import { graphqlHTTP } from 'express-graphql';
+import { GraphQLSchema } from 'graphql';
 
 export class RootService implements IRootService {
   app: Express;
@@ -30,18 +32,21 @@ export class RootService implements IRootService {
     }
   }
 
-  async init(): Promise<void> {
+  async init(schema: GraphQLSchema, root: IGraphQlHandlers): Promise<void> {
     this.logger.info('Init express service');
     this.app = express();
 
     this.app.use(express.json({ limit: '50mb' }));
     this.app.use(express.urlencoded({ limit: '50mb', extended: true }));
-  }
 
-  async initTest(): Promise<Express> {
-    await this.init()
-
-    return this.app;
+    this.app.use(
+      "/graphql",
+      graphqlHTTP({
+        schema: schema,
+        rootValue: root,
+        graphiql: true,
+      })
+    );
   }
 
   listen(): void {
