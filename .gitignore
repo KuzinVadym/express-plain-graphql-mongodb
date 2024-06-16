@@ -1,0 +1,12 @@
+**/node_modules
+**/dist
+**/pact/logs
+**/pact/pacts
+**/coverage
+**/.env
+**/.DS_Store
+**/tsconfig.tsbuildinfo
+**/newrelic_agent.log
+**/.idea
+shared-makefiles
+**/volumes
