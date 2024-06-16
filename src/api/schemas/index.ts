@@ -56,7 +56,6 @@ const schema = buildSchema(`
     updateProducer(input: UpdateProducerInput!): Producer!
     deleteProducer(id: ID!): Boolean!
   }
-
 `);
 
 export default schema;

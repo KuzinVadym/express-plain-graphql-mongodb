@@ -1,25 +1,8 @@
-import { ObjectId, Types } from 'mongoose';
-import { IProduct, IProductDocument } from '../../interfaces';
+import { TCreateProductsInput, TProduct, TUpdateProductInput } from '../../interfaces';
 import { randomUUID } from "crypto";
-
-type TProducer = {
-    _id: String
-    name: String
-    country: String
-    region: String
-}
-
-type TProduct = {
-    _id: String
-    name: String
-    vintage: String
-    producerId: String
-    producer: TProducer
-}
 
 const getProducts = (): TProduct[] | undefined => {
 
-    const productId = new Types.ObjectId()
     return [{
         _id: randomUUID().toString(),
         vintage: 'vintage',
@@ -34,6 +17,65 @@ const getProducts = (): TProduct[] | undefined => {
     }];
   };
 
+const getProduct = (args: { id: string }): TProduct | undefined => {
+
+    return {
+        _id: randomUUID().toString(),
+        vintage: 'vintage',
+        name: 'name',
+        producerId: randomUUID().toString() ,
+        producer: {
+            _id: randomUUID().toString(),
+            name: 'producer',
+            country: 'country',
+            region: 'region'
+        }
+    };
+  };
+
+  const createProducts = ({ input }: { input: TCreateProductsInput }): TProduct[] => {
+    // create pet object and save
+    return [{
+        _id: randomUUID().toString(),
+        vintage: 'vintage',
+        name: 'name',
+        producerId: randomUUID().toString() ,
+        producer: {
+            _id: randomUUID().toString(),
+            name: 'producer',
+            country: 'country',
+            region: 'region'
+        }
+    }];
+  };
+
+  const updateProduct = (args: { input: TUpdateProductInput }): TProduct => {
+    // create pet object and save
+    return {
+        _id: randomUUID().toString(),
+        vintage: 'vintage',
+        name: 'name',
+        producerId: randomUUID().toString() ,
+        producer: {
+            _id: randomUUID().toString(),
+            name: 'producer',
+            country: 'country',
+            region: 'region'
+        }
+    };
+  };
+
+  const deleteProducts = (args: [input: string[]]): Boolean => {
+    // create pet object and save
+    return true;
+  };
+
+  
+
 export const productResolvers = {
-    getProducts
+    getProducts,
+    getProduct,
+    createProducts,
+    updateProduct,
+    deleteProducts
   };

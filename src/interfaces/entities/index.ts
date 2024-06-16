@@ -11,7 +11,7 @@ export interface IProducerDocument extends IProducer, Document {}
 export type IProduct = {
     vintage: String
     name: String
-    producerId: String
+    producerId: Types.ObjectId
     producer: IProducer
 }
 
