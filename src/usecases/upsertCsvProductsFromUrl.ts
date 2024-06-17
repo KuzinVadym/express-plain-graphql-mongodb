@@ -1,7 +1,7 @@
 import pino from 'pino';
 import https from 'https';
-
-import entities from '../enyities';
+import { pipeline, Transform, Duplex } from 'stream';
+import { HeaderKeysRegistry } from './HeaderKeysRegistry';
 
 type TUpsertRecordsResult = {
   insertedCount: number,
@@ -12,22 +12,6 @@ type TUpsertRecordsResult = {
 }
 
 const logger = pino();
-
-async function getCsvData(url): Promise<string[]> {
-  let results = [];
-
-  return new Promise((resolve, reject) => {
-    https.get(url, (response) => {
-        
-      response.on('data', (chunk) => {
-        const temp = chunk.toString();
-        results = results.concat(...temp.split(/\r?\n/))
-      });
-      response.on('end', () => resolve(results));
-      response.on('error', (error) => reject(error));
-    });
-  });
-}
 
 function collectResult(results) {
   return results.reduce((result, item) => {
@@ -47,56 +31,52 @@ function collectResult(results) {
   })
 }
 
-async function upsertProducers(producersChunks, ProducerModel): Promise<TUpsertRecordsResult> {
+async function upsertProducers(producers, ProducerModel): Promise<TUpsertRecordsResult> {
   const results = []
 
-  for (const chunk of producersChunks) {
+  const upsertResult = await ProducerModel.bulkWrite(
+    producers.map(item => ({name: item.producer, country: item.country, region: item.region})).map((item) => ({
+      updateOne: {
+        filter: {name: item.name, country: item.country, region: item.region},
+        update: item,
+        upsert: true
+      },
+    })),
+    { ordered: false, new: true } // Allow some failures without stopping entire process
+  );
 
-    const upsertResult = await ProducerModel.bulkWrite(
-      chunk.map(item => ({name: item.producer, country: item.country, region: item.region})).map((item) => ({
-        updateOne: {
-          filter: {name: item.name, country: item.country, region: item.region},
-          update: item,
-          upsert: true
-        },
-      })),
-      { ordered: false, new: true } // Allow some failures without stopping entire process
-    );
-
-    results.push(upsertResult)
-    logger.info(upsertResult)
-  }
+  results.push(upsertResult);
+  logger.info('');
+  logger.info('');
+  logger.info(upsertResult);
 
   return collectResult(results);
 }
 
-async function upsertProducts(producersChunks, ProductModel, ProducerModel): Promise<TUpsertRecordsResult> {
-  console.log('upsertProducts');
+async function upsertProducts(products, ProductModel, ProducerModel): Promise<TUpsertRecordsResult> {
   const results = []
 
-  for (const chunk of producersChunks) {
-
-    // find producers ids for each product
-    for (const product of chunk) {
-      const producer = await ProducerModel.findOne({name: product.producer})
-      product.producerId = producer._id
-    }
-
-    const upsertResult = await ProductModel.bulkWrite(
-      chunk.map(item => ({name: item['product name'], vintage: item.vintage, producerId: item.producerId}))
-      .map((item) => ({
-        updateOne: {
-          filter: {name: item.name, vintage: item.vintage, producerId: item.producerId},
-          update: item,
-          upsert: true
-        },
-      })),
-      { ordered: false, new: true } // Allow some failures without stopping entire process
-    );
-
-    results.push(upsertResult)
-    logger.info(upsertResult)
+  for (const product of products) {
+    const producer = await ProducerModel.findOne({name: product.producer})
+    product.producerId = producer._id
   }
+
+  const upsertResult = await ProductModel.bulkWrite(
+    products.map(item => ({name: item['product name'], vintage: item.vintage, producerId: item.producerId}))
+    .map((item) => ({
+      updateOne: {
+        filter: {name: item.name, vintage: item.vintage, producerId: item.producerId},
+        update: item,
+        upsert: true
+      },
+    })),
+    { ordered: false, new: true } // Allow some failures without stopping entire process
+  );
+
+  results.push(upsertResult);
+  logger.info('');
+  logger.info('');
+  logger.info(upsertResult);
 
   return collectResult(results);
 }
@@ -119,7 +99,7 @@ function filterUniqueVintageProductNameProducer(data) {
   return filtered;
 }
 
-function filterUniqueProducerCountryRegion(data) {
+function filterUniqueProducerCountryRegion(data: Record<string, string>[]) {
   const seen = new Set();
   const filtered = [];
 
@@ -145,45 +125,88 @@ function splitArrayInChunks(arr, chunkSize = 100) {
   return chunks;
 }
 
+function upsertRecordsHandler(ProductModel, ProducerModel) {
+  return async function(objects: Record<string, string>[]){
 
-export async function upsertCsvProductsFromUrl(url: string): Promise<void> {
-  try {
-    const { ProductModel, ProducerModel } = entities;
+    const objectsChunks = splitArrayInChunks(objects, 100);
 
-    const csvRecords = await getCsvData('https://api.frw.co.uk/feeds/all_listings.csv');
+    for (const chunk of objectsChunks) {
 
-    const headerKeys = csvRecords.splice(0,1)[0].toLowerCase().split(',');
+      const groupedProducts = filterUniqueVintageProductNameProducer(chunk);
+      const groupedProducers = filterUniqueProducerCountryRegion(chunk);
 
-    const objects = [];
-
-    for (const record of csvRecords) {
-      const object = {};
-    
-      const temp = record.split(',');
-      for (let i = 0; i < temp.length; i++) {
-        object[headerKeys[i]] = temp[i];
-      }
-          
-      objects.push(object);
+      await upsertProducers(groupedProducers, ProducerModel).then(upsertProducersResult => {
+        logger.info('upsertProducersResult')
+        logger.info(upsertProducersResult)
+      }).catch(error => {
+        logger.error(error)
+      });
+  
+     await upsertProducts(groupedProducts, ProductModel, ProducerModel).then(upsertProductResult => {
+        logger.info('UpsertProductResult')
+        logger.info(upsertProductResult)
+      }).catch(error => {
+        logger.error(error)
+      });
     }
+  }
+}
 
-    const groupedProducts = filterUniqueVintageProductNameProducer(objects);
-    const groupedProducers = filterUniqueProducerCountryRegion(objects);
+function csvRecordToObject(headerKeysRegistry, transformCallback) {
+  return new Transform({
+    transform(chunk, encoding, callback) {
+      const temp = chunk.toString();
+      const csvRecords = temp.split(/\r?\n/)
 
-    const productsChunks = splitArrayInChunks(groupedProducts, 100);
-    const producersChunks = splitArrayInChunks(groupedProducers, 100);
+      if (!headerKeysRegistry.getKeys().length) {
+        const headerKeys = csvRecords.splice(0,1)[0].toLowerCase().split(',');
+        headerKeysRegistry.setKeys(headerKeys);
+      }
 
-    const upsertProducersResult = await upsertProducers(producersChunks, ProducerModel);
+      const objects = [];
 
-    logger.info('UpsertProducersResult')
-    logger.info(upsertProducersResult)
+      for (const record of csvRecords) {
+        const object = {};
+      
+        const temp = record.split(',');
+        for (let i = 0; i < temp.length; i++) {
+          object[headerKeysRegistry.getKeys()[i]] = temp[i];
+        }
+            
+        objects.push(object);
+      }
 
-    const upsertProductResult = await upsertProducts(productsChunks, ProductModel, ProducerModel);
+      transformCallback(objects).catch(error => {
+        logger.error('Error during transformCallback')
+        logger.error(error)
+      });
+      
+      callback(null);
+    },
+  });
+}
 
-    logger.info('UpsertProductResult')
-    logger.info(upsertProductResult)
+export function upsertCsvProductsFromUrlUseCase(entities): Function {
+  return async function(url: string): Promise<void> {
+    try {
+      const { ProductModel, ProducerModel } = entities;
+  
+      const transformCallback = upsertRecordsHandler(ProductModel, ProducerModel);
+      const transformData = csvRecordToObject(HeaderKeysRegistry.instance, transformCallback);
+      
+      https.get(url, (response) => {
+        
+        response.pipe(transformData).on('error', (error) => {
+          logger.error('Error during UpsertCsvProductsFromUrlUseCase ')
+          logger.error(error)
+        });
+        response.on('end', () => {
+          logger.info('CSV File was readed sucessfully')
+        });
+      });
 
-  } catch (error) {
-    throw new Error(error);
+    } catch (error) {
+      throw new Error(error);
+    }
   }
 }

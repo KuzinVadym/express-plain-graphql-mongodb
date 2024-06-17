@@ -2,35 +2,12 @@ import express, { Express } from 'express';
 
 import { ILogger, IMongoClient, IRootService, ISettings } from './interfaces';
 import { MongoClient } from './clients';
-import { graphqlHTTP } from 'express-graphql';
+import { createHandler } from 'graphql-http/lib/use/express';
 import { GraphQLSchema } from 'graphql';
-import entities from './enyities';
-import { initResolvers } from './api/resolvers';
 
-const dataSources = {
-  products: {
-    getProductById: async (_id) => {
-      // Fetch product data from your data source
-      return {
-        _id: '1',
-        name: 'My Product',
-        vintage: '2023',
-        producerId: '123',
-      };
-    },
-  },
-  producers: {
-    getProducerById: async (_id) => {
-      // Fetch producer data from your data source
-      return {
-        _id: '123',
-        name: 'Awesome Producer',
-        country: 'France',
-        region: 'Bordeaux',
-      };
-    },
-  },
-};
+import entities from './entities';
+import { initResolvers } from './api/resolvers';
+import { initUseCases } from './usecases';
 
 export class RootService implements IRootService {
   app: Express;
@@ -67,11 +44,11 @@ export class RootService implements IRootService {
     this.app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
     const resolvers = initResolvers(entities);
+    const useCases = initUseCases(entities);
 
-    this.app.use('/graphql', graphqlHTTP({
+    this.app.use('/graphql', createHandler({
       schema,
-      context: { dataSources, resolvers }, // Pass data sources to resolvers
-      graphiql: true, // Enable GraphiQL UI for development
+      context: { resolvers, useCases }, // Pass data sources to resolvers
     }));
   }
 

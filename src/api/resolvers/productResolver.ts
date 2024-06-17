@@ -1,8 +1,6 @@
-import { randomUUID } from 'crypto';
 import { Model } from 'mongoose';
 
-import { IProductDocument, TBulkCreateProductsInput, TCreateProductsInput, TDeleteProductsResult, TProduct, TUpdateProductInput } from '../../interfaces';
-import { upsertCsvProductsFromUrl } from '../../usecases';
+import { IProductDocument, TCreateProductsInput, TDeleteProductsResult, TProduct, TUpdateProductInput } from '../../interfaces';
 
 
 export class ProductResolvers {
@@ -66,9 +64,9 @@ export class ProductResolvers {
       }
     };
 
-    public bulkCreateProducts = async (input: TBulkCreateProductsInput): Promise<Boolean> => {
+    public bulkCreateProducts = async (link: string, handler): Promise<Boolean> => {
       try {
-        upsertCsvProductsFromUrl(input.link)
+        handler(link)
 
         return true
 

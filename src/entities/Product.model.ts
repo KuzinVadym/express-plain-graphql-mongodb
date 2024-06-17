@@ -5,7 +5,6 @@ const ProductSchema: Schema<IProductDocument> = new Schema({
         vintage: { type: String, require: true },
         name: { type: String, require: true },
         producerId: Types.ObjectId,
-        producer: { type: String, require: true }
     },
     {
         timestamps: true
