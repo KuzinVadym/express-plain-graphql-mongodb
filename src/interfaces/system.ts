@@ -16,7 +16,6 @@ export interface ISettings {
 export interface IRootService {
   init: (
     schema: GraphQLSchema,
-    root: IGraphQlHandlers
   ) => Promise<void>;
   withDB?: () => Promise<void>;
   listen: () => void;

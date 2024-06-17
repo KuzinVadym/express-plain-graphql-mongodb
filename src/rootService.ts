@@ -1,9 +1,36 @@
 import express, { Express } from 'express';
 
-import { IGraphQlHandlers, ILogger, IMongoClient, IRootService, ISettings } from './interfaces';
+import { ILogger, IMongoClient, IRootService, ISettings } from './interfaces';
 import { MongoClient } from './clients';
 import { graphqlHTTP } from 'express-graphql';
 import { GraphQLSchema } from 'graphql';
+import entities from './enyities';
+import { initResolvers } from './api/resolvers';
+
+const dataSources = {
+  products: {
+    getProductById: async (_id) => {
+      // Fetch product data from your data source
+      return {
+        _id: '1',
+        name: 'My Product',
+        vintage: '2023',
+        producerId: '123',
+      };
+    },
+  },
+  producers: {
+    getProducerById: async (_id) => {
+      // Fetch producer data from your data source
+      return {
+        _id: '123',
+        name: 'Awesome Producer',
+        country: 'France',
+        region: 'Bordeaux',
+      };
+    },
+  },
+};
 
 export class RootService implements IRootService {
   app: Express;
@@ -32,21 +59,20 @@ export class RootService implements IRootService {
     }
   }
 
-  async init(schema: GraphQLSchema, root: IGraphQlHandlers): Promise<void> {
+  async init(schema: GraphQLSchema): Promise<void> {
     this.logger.info('Init express service');
     this.app = express();
 
     this.app.use(express.json({ limit: '50mb' }));
     this.app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-    this.app.use(
-      "/graphql",
-      graphqlHTTP({
-        schema: schema,
-        rootValue: root,
-        graphiql: true,
-      })
-    );
+    const resolvers = initResolvers(entities);
+
+    this.app.use('/graphql', graphqlHTTP({
+      schema,
+      context: { dataSources, resolvers }, // Pass data sources to resolvers
+      graphiql: true, // Enable GraphiQL UI for development
+    }));
   }
 
   listen(): void {
