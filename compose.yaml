@@ -3,16 +3,56 @@
 version: '3.8'
 services:
 
-  mongodb:
+  mongo:
     image: mongo:6-jammy
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
     volumes:
-      - mongodb_data:/data/db
+      - mongo_data:/data/db
     ports:
       - 27017:27017
+    networks:
+      - mongo_db_nodejs  
+
+  mongo-express:
+    image: mongo-express
+    ports:
+      - "8081:8081"
+    environment: 
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_BASICAUTH_USERNAME: root
+      ME_CONFIG_BASICAUTH_PASSWORD: example
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+    depends_on:
+      - mongo
+    restart: always
+    networks:
+      - mongo_db_nodejs
+
+  graphql-api:
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    ports:
+      - '3333:3333'
+    depends_on:
+      - 'mongo'
+    restart: always
+    environment:
+      DB_NAME: ${DB_NAME}
+      DB_URL: ${DB_URL_DOCKER_COMPOSE}
+    networks:
+      - mongo_db_nodejs
 
 volumes:
-  mongodb_data:
+  mongo_data:
+
+networks:
+  mongo_db_nodejs:
+    driver: bridge  
