@@ -12,11 +12,11 @@ export type TCreateProducerInput = {
   }
   
   
-    export type TUpdateProducerInput = {
-      _id: String
-      name: String
-      vintage: String
-      producerId: String
-      producer: TProducer
-  }
+export type TUpdateProducerInput = {
+  _id: String
+  name: String
+  vintage: String
+  producerId: String
+  producer: TProducer
+}
   

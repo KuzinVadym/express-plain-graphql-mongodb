@@ -1,4 +1,3 @@
-import { randomUUID } from 'crypto';
 import { Model } from 'mongoose';
 
 import { IProducerDocument, TCreateProducerInput, TProducer, TUpdateProducerInput } from '../../interfaces';

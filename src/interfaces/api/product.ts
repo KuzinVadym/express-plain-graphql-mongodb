@@ -13,6 +13,9 @@ export type TCreateProductsInput = {
   producerId: String
 }
 
+export type TBulkCreateProductsInput = {
+  link: string
+}
 
 export type TUpdateProductInput = {
   _id: String
