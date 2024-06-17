@@ -2,7 +2,7 @@ import express, { Express } from 'express';
 
 import { ILogger, IMongoClient, IRootService, ISettings } from './interfaces';
 import { MongoClient } from './clients';
-import { graphqlHTTP } from 'express-graphql';
+import { createHandler } from 'graphql-http/lib/use/express';
 import { GraphQLSchema } from 'graphql';
 import entities from './enyities';
 import { initResolvers } from './api/resolvers';
@@ -68,10 +68,9 @@ export class RootService implements IRootService {
 
     const resolvers = initResolvers(entities);
 
-    this.app.use('/graphql', graphqlHTTP({
+    this.app.use('/graphql', createHandler({
       schema,
       context: { dataSources, resolvers }, // Pass data sources to resolvers
-      graphiql: true, // Enable GraphiQL UI for development
     }));
   }
 
