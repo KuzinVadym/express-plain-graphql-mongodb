@@ -64,6 +64,7 @@ async function upsertProducers(producersChunks, ProducerModel): Promise<TUpsertR
     );
 
     results.push(upsertResult)
+    logger.info(upsertResult)
   }
 
   return collectResult(results);
@@ -83,7 +84,6 @@ async function upsertProducts(producersChunks, ProductModel, ProducerModel): Pro
 
     const upsertResult = await ProductModel.bulkWrite(
       chunk.map(item => ({name: item['product name'], vintage: item.vintage, producerId: item.producerId}))
-      .filter(item => item.name && item.vintage && item.producerId)
       .map((item) => ({
         updateOne: {
           filter: {name: item.name, vintage: item.vintage, producerId: item.producerId},
@@ -95,6 +95,7 @@ async function upsertProducts(producersChunks, ProductModel, ProducerModel): Pro
     );
 
     results.push(upsertResult)
+    logger.info(upsertResult)
   }
 
   return collectResult(results);
@@ -105,11 +106,13 @@ function filterUniqueVintageProductNameProducer(data) {
   const filtered = [];
 
   for (const obj of data) {
-    const key = `${obj.vintage}-${obj['product name']}-${obj.producer}`;
+    if (obj.vintage && obj['product name'] && obj.producer) {
+      const key = `${obj.vintage}-${obj['product name']}-${obj.producer}`;
 
-    if (!seen.has(key)) {
-      seen.add(key);
-      filtered.push(obj);
+      if (!seen.has(key)) {
+        seen.add(key);
+        filtered.push(obj);
+      }
     }
   }
 
