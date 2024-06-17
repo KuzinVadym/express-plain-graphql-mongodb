@@ -13,4 +13,7 @@ const settings: ISettings = {
   }
 };
 
+console.log('settings');
+console.log(settings);
+
 export { settings };
