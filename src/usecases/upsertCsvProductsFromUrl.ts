@@ -63,8 +63,10 @@ async function upsertProducers(producersChunks, ProducerModel): Promise<TUpsertR
       { ordered: false, new: true } // Allow some failures without stopping entire process
     );
 
-    results.push(upsertResult)
-    logger.info(upsertResult)
+    results.push(upsertResult);
+    logger.info('');
+    logger.info('');
+    logger.info(upsertResult);
   }
 
   return collectResult(results);
@@ -94,8 +96,10 @@ async function upsertProducts(producersChunks, ProductModel, ProducerModel): Pro
       { ordered: false, new: true } // Allow some failures without stopping entire process
     );
 
-    results.push(upsertResult)
-    logger.info(upsertResult)
+    results.push(upsertResult);
+    logger.info('');
+    logger.info('');
+    logger.info(upsertResult);
   }
 
   return collectResult(results);

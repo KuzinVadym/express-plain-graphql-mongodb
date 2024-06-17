@@ -1,5 +1,5 @@
-import { ProducerResolvers } from './producer.resolver';
-import { ProductResolvers } from './product.resolver';
+import { ProducerResolvers } from './producerResolver';
+import { ProductResolvers } from './productResolver';
 
 export function initResolvers(entities) {
   const { ProductModel, ProducerModel } = entities;
