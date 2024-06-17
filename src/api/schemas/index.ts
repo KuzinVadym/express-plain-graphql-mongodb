@@ -1,61 +1,54 @@
-import { buildSchema } from "graphql";
+import { GraphQLSchema, GraphQLObjectType, GraphQLString, GraphQLID, GraphQLNonNull, GraphQLList } from 'graphql';
 
-const schema = buildSchema(`
-  type Producer {
-    _id: ID!
-    name: String!
-    country: String
-    region: String
-  }
+const ProducerType = new GraphQLObjectType({
+  name: 'Producer',
+  fields: {
+    _id: { type: GraphQLID },
+    name: { type: GraphQLString },
+    country: { type: GraphQLString },
+    region: { type: GraphQLString },
+  },
+});
 
-  type Product {
-    _id: ID!
-    name: String!
-    vintage: String!
-    producerId: ID!
-    producer: Producer!
-  }
+const ProductType = new GraphQLObjectType({
+  name: 'Product',
+  fields: {
+    _id: { type: new GraphQLNonNull(GraphQLID) },
+    name: { type: new GraphQLNonNull(GraphQLString) },
+    vintage: { type: new GraphQLNonNull(GraphQLString) },
+    producerId: { type: new GraphQLNonNull(GraphQLID) },
+    producer: {
+      type: ProducerType,
+      resolve: async (product, _, { resolvers }) => {
+        return resolvers.producersResolver.getProducer({_id: product.producerId})
+      },
+    },
+  },
+});
 
-  type Query {
-    getProducts: [Product]
-    getProduct(id: ID!): Product
-  }
+const QueryType = new GraphQLObjectType({
+  name: 'Query',
+  fields: {
+    product: {
+      type: ProductType,
+      args: {
+        _id: { type: GraphQLID },
+        producerId: { type: GraphQLID },
+      },
+      resolve: async (_, { _id, producerId }, { resolvers }) => {
+        return resolvers.productsResolver.getProduct({_id})
+      },
+    },
+    products: {
+      type: new GraphQLNonNull(new GraphQLList(ProductType)), // Non-null list of Products
+      resolve: async (_, __, { resolvers }) => {
+        // Implement resolver logic here
+        return resolvers.productsResolver.getProducts()
+      },
+    },
+  },
+});
 
-  input CreateProductsInput {
-    name: String!
-    vintage: String!
-    producerId: ID!
-  }
+const plainSchema = new GraphQLSchema({ query: QueryType });
 
-  input UpdateProductInput {
-    _id: ID!
-    name: String!
-    vintage: String!
-    producerId: ID!
-  }
-
-  input CreateProducerInput {
-    name: String!
-    vintage: String!
-    producerId: ID!
-  }
-
-  input UpdateProducerInput {
-    name: String!
-    vintage: String!
-    producerId: ID!
-  }
-
-
-  type Mutation {
-    createProducts(input: [CreateProductsInput!]): [Product!]
-    updateProduct(input: UpdateProductInput!): Product!
-    deleteProducts(input: [ID!]): Boolean!
-
-    createProducer(input: CreateProducerInput!): Producer!
-    updateProducer(input: UpdateProducerInput!): Producer!
-    deleteProducer(id: ID!): Boolean!
-  }
-`);
-
-export default schema;
+export default plainSchema;

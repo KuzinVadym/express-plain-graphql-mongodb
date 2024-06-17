@@ -1,33 +1,50 @@
-import { TCreateProducerInput, TProducer, TUpdateProducerInput } from '../../interfaces';
-import { randomUUID } from "crypto";
+import { randomUUID } from 'crypto';
+import { Model } from 'mongoose';
 
-  const createProducer = ({ input }: { input: TCreateProducerInput }): TProducer => {
-    // create pet object and save
-    return {
-      _id: randomUUID().toString(),
-      name: 'producer',
-      country: 'country',
-      region: 'region'
-    };
-  };
+import { IProducerDocument, IProductDocument, TCreateProducerInput, TCreateProductsInput, TProducer, TProduct, TUpdateProducerInput, TUpdateProductInput } from '../../interfaces';
 
-  const updateProducer = (args: { input: TUpdateProducerInput }): TProducer => {
-    // create pet object and save
-    return {
-      _id: randomUUID().toString(),
-      name: 'producer',
-      country: 'country',
-      region: 'region'
-  };
-  };
 
-  const deleteProducer = (args: [input: string[]]): Boolean => {
-    // create pet object and save
-    return true;
-  };
+export class ProducerResolvers {
+    constructor(private readonly producerModel: Model<IProducerDocument>){
+    }
 
-export const productResolvers = {
-    createProducer,
-    updateProducer,
-    deleteProducer
-  };
+    public getProducers = async (): Promise<TProducer[]> => {
+        return [{
+          _id: randomUUID().toString(),
+          name: 'producer',
+          country: 'country',
+          region: 'region'
+        }];
+      };
+  
+    public getProducer = async (args: { _id: string }): Promise<TProducer | null> => {
+        return {
+          _id: randomUUID().toString(),
+          name: 'producer',
+          country: 'country',
+          region: 'region'
+        };
+      };
+  
+    public createProducer = async ({ input }: { input: TCreateProducerInput }): Promise<TProducer> => {
+        return {
+          _id: randomUUID().toString(),
+          name: 'producer',
+          country: 'country',
+          region: 'region'
+        };
+      };
+  
+    public updateProducer = async (args: { input: TUpdateProducerInput }): Promise<TProducer> => {
+        return {
+          _id: randomUUID().toString(),
+          name: 'producer',
+          country: 'country',
+          region: 'region'
+        };
+      };
+  
+    public deleteProducer = async (args: [input: string[]]): Promise<Boolean> => {
+        return true;
+      };
+  }

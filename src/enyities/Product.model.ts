@@ -1,5 +1,5 @@
 import { model, Schema, Types } from 'mongoose';
-import { IProductDocument } from '../../interfaces';
+import { IProductDocument } from '../interfaces';
 
 const ProductSchema: Schema<IProductDocument> = new Schema({
         _id: Types.ObjectId,
@@ -13,6 +13,6 @@ const ProductSchema: Schema<IProductDocument> = new Schema({
     }
 );
 
-const Product = model<IProductDocument>('products', ProductSchema);
+const ProductModel = model<IProductDocument>('products', ProductSchema);
 
-export { Product };
+export { ProductModel };

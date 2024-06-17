@@ -1,7 +1,13 @@
-import { productResolvers } from './product.resolvers'
+import { ProducerResolvers } from './Producer.resolver';
+import { ProductResolvers } from './Product.resolver';
 
- const root = {
-    ...productResolvers
-  };
+export function initResolvers(entities) {
+  const { ProductModel, ProducerModel } = entities;
+  const productsResolver = new ProductResolvers(ProductModel);
+  const producersResolver = new ProducerResolvers(ProducerModel);
 
-  export default root
+  return {
+    productsResolver,
+    producersResolver
+  }
+}  

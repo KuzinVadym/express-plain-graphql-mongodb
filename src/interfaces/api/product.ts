@@ -5,7 +5,6 @@ export type TProduct = {
     name: String
     vintage: String
     producerId: String
-    producer: TProducer
 }
 
 export type TCreateProductsInput = {
@@ -20,7 +19,6 @@ export type TCreateProductsInput = {
     name: String
     vintage: String
     producerId: String
-    producer: TProducer
 }
 
 
