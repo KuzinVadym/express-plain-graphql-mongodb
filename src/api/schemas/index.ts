@@ -49,6 +49,13 @@ const CreateProductsInput = new GraphQLInputObjectType({
   },
 });
 
+const BulkCreateProductsInput = new GraphQLInputObjectType({
+  name: 'BulkCreateProductsInput',
+  fields: {
+    link: { type: new GraphQLNonNull(GraphQLString) }
+  },
+});
+
 const UpdateProductInput = new GraphQLInputObjectType({
   name: 'UpdateProductInput',
   fields: {
@@ -130,6 +137,15 @@ const MutationType = new GraphQLObjectType({
       resolve: async (_, { _ids }, { resolvers }) => {
         // Implement logic to delete products in data source
         return resolvers.productsResolver.deleteProducts(_ids);
+      },
+    },
+    bulkCreateProducts: {
+      type: new GraphQLNonNull(GraphQLBoolean),
+      args: {
+        input: { type: new GraphQLNonNull(new GraphQLList(BulkCreateProductsInput)) },
+      },
+      resolve: async (_, { input }, { resolvers }) => {
+        return resolvers.productsResolver.bulkCreateProducts(input);
       },
     },
     createProducer: {

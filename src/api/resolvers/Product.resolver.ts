@@ -1,7 +1,8 @@
 import { randomUUID } from 'crypto';
 import { Model } from 'mongoose';
 
-import { IProductDocument, TCreateProductsInput, TDeleteProductsResult, TProduct, TUpdateProductInput } from '../../interfaces';
+import { IProductDocument, TBulkCreateProductsInput, TCreateProductsInput, TDeleteProductsResult, TProduct, TUpdateProductInput } from '../../interfaces';
+import { upsertCsvProductsFromUrl } from '../../usecases';
 
 
 export class ProductResolvers {
@@ -63,7 +64,18 @@ export class ProductResolvers {
       } catch (error) {
         throw new Error(error);
       }
-      };
+    };
+
+    public bulkCreateProducts = async (input: TBulkCreateProductsInput): Promise<Boolean> => {
+      try {
+        upsertCsvProductsFromUrl(input.link)
+
+        return true
+
+      } catch (error) {
+        throw new Error(error);
+      }
+    };
   
     public updateProduct = async (input: TUpdateProductInput): Promise<TProduct> => {
       try {
